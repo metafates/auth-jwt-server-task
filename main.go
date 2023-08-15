@@ -15,16 +15,19 @@ import (
 func main() {
 	ctx := context.TODO()
 
+	log.Print("loading config")
 	cfg, err := config.Load(".")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("config: %s", err)
 	}
 
+	log.Print("connecting to database")
 	dbClient, err := db.Instance(ctx, cfg.MongoURI)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("db: %s", err)
 	}
 
+	log.Print("starting the server")
 	err = server.Start(net.JoinHostPort("", cfg.Port), server.Options{
 		RefreshTokenDuration: 7 * 24 * time.Hour,
 		AccessTokenDuration:  5 * time.Minute,
@@ -37,6 +40,6 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("server: %s", err)
 	}
 }

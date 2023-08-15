@@ -1,9 +1,12 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha512"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -41,6 +44,16 @@ func (s *Server) db() *mongo.Database {
 	return s.options.DB.Client.Database(s.options.DB.Database)
 }
 
+func (s *Server) hashToken(token string) []byte {
+	// bcrypt can't operate on passwords longer that 72 bytes which makes it
+	// unsuitable for JWT tokens
+	//
+	// https://stackoverflow.com/questions/64860460/store-the-hashed-jwt-token-in-the-database
+
+	hashed := sha512.Sum512([]byte(token))
+	return hashed[:]
+}
+
 func (s *Server) verifyRefreshToken(GUID string, token string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -64,11 +77,12 @@ func (s *Server) verifyRefreshToken(GUID string, token string) (bool, error) {
 		return false, err
 	}
 
-	if userToken := user.RefreshToken; userToken != nil {
-		return *userToken == token, nil
+	userToken := user.RefreshToken
+	if userToken == nil {
+		return false, nil
 	}
 
-	return false, nil
+	return bytes.Equal([]byte(*userToken), s.hashToken(token)), nil
 }
 
 func (s *Server) writeRefreshToken(GUID string, token string) error {
@@ -77,8 +91,10 @@ func (s *Server) writeRefreshToken(GUID string, token string) error {
 
 	usersDB := s.db().Collection("users")
 
+	hashed := s.hashToken(token)
+
 	updateObject := primitive.M{
-		refreshTokenName: token,
+		refreshTokenName: string(hashed),
 	}
 
 	filter := bson.M{"guid": GUID}
@@ -152,10 +168,12 @@ func (s *Server) PostAuth(ctx echo.Context, params openapi.PostAuthParams) error
 
 	pair, err := s.generateSignedTokenPair(GUID)
 	if err != nil {
+		log.Print(err)
 		return ctx.NoContent(http.StatusInternalServerError)
 	}
 
 	if err := s.writeRefreshToken(GUID, pair.Refresh.String); err != nil {
+		log.Print(err)
 		return ctx.NoContent(http.StatusInternalServerError)
 	}
 
@@ -170,6 +188,7 @@ func (s *Server) PostRefresh(ctx echo.Context) error {
 			return ctx.NoContent(http.StatusUnauthorized)
 		}
 
+		log.Print(err)
 		return ctx.NoContent(http.StatusInternalServerError)
 	}
 
@@ -188,6 +207,7 @@ func (s *Server) PostRefresh(ctx echo.Context) error {
 
 	isVerified, err := s.verifyRefreshToken(claims.GUID, cookie.Value)
 	if err != nil {
+		log.Print(err)
 		return ctx.NoContent(http.StatusInternalServerError)
 	}
 
@@ -197,10 +217,12 @@ func (s *Server) PostRefresh(ctx echo.Context) error {
 
 	pair, err := s.generateSignedTokenPair(claims.GUID)
 	if err != nil {
+		log.Print(err)
 		return ctx.NoContent(http.StatusInternalServerError)
 	}
 
 	if err := s.writeRefreshToken(claims.GUID, pair.Refresh.String); err != nil {
+		log.Print(err)
 		return ctx.NoContent(http.StatusInternalServerError)
 	}
 

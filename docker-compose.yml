@@ -4,15 +4,15 @@ services:
     ports:
       - 1234:1234
     depends_on:
-      - mongodb
+      - mongo
     environment:
-      PORT: 1234
-      JWT_SECRET: RMxcllZRO5FCurG6zZGeB2vyg7WBxuLCSYl1Qx127H9zZ55qe6XsGABY47MVuwm
-      MONGO_URI: mongodb://root:example@mongodb:27017
-      MONGO_DB: cluster0
+      SERVER_PORT: 1234
+      SERVER_JWT_SECRET: RMxcllZRO5FCurG6zZGeB2vyg7WBxuLCSYl1Qx127H9zZ55qe6XsGABY47MVuwm
+      SERVER_MONGO_URI: mongodb://root:example@mongo:27017
+      SERVER_MONGO_DB: cluster0
     build:
       context: .
-  mongodb:
+  mongo:
     image: mongo:latest
     restart: always
     ports:
@@ -20,14 +20,14 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-  mongodb-express:
+  mongo-express:
     image: mongo-express
     restart: always
     depends_on:
-      - mongodb
+      - mongo
     ports:
       - 8081:8081
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
