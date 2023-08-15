@@ -28,6 +28,17 @@ docker compose up
 - [mongo-express](https://hub.docker.com/_/mongo-express) (web ui for mongo) - port `8081`
 - JWT (from [Dockerfile](./Dockerfile)) server - port `1234`
 
+## Libraries used
+
+- [koanf](https://github.com/knadh/koanf) - for configuration management
+- [echo](https://github.com/labstack/echo) - web framework 
+- [mongo-go-driver](https://github.com/mongodb/mongo-go-driver) - mongodb driver
+- [jwt-go](https://github.com/golang-jwt/jwt)
+
+And...
+
+- [oapi-codegen](https://github.com/deepmap/oapi-codegen) - generates server boilerplate from [openapi schema](./openapi.yaml).
+
 
 ## Notes
 
