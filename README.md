@@ -25,7 +25,7 @@ docker compose up
 **It will spin up a...**
 
 - [mongo](https://hub.docker.com/_/mongo) - port `27017`; root username `root`; root password `example`
-- [mongo-express](https://hub.docker.com/_/mongo-express) (web ui for mongo) - port `8081`
+- [mongo-express](https://hub.docker.com/_/mongo-express) (web ui for mongo) - port `8081` **Disabled**
 - JWT (from [Dockerfile](./Dockerfile)) server - port `1234`
 
 ## Libraries used
