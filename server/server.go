@@ -200,6 +200,10 @@ func (s *Server) PostRefresh(ctx echo.Context) error {
 
 		return s.options.Secret, nil
 	})
+	if err != nil {
+		log.Print(err)
+		return ctx.NoContent(http.StatusInternalServerError)
+	}
 
 	if !refreshToken.Valid {
 		return ctx.NoContent(http.StatusUnauthorized)
